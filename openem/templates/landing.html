@@ -33,14 +33,12 @@
     <div class="conversation">
         <div class="title">{{conv.title}}</div>
         <div class="messages">
-        {% for message in conv.messages[:2] %}
+        {% for message in conv.first_messages %}
             {% include "_message.html" %}
         {% endfor %}
         </div>
         <a class="action" href="/conversations/{{conv.id}}">המשך</a>
     </div>
-    {% else %}
-    <div  class="note">זה נורא עצוב, אבל אין כאן שום דבר.</div>
     {% endfor %}
     <div id="enter">
         <a href="/login" class="btn">כניסה לאתר</a>
