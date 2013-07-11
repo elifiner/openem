@@ -14,25 +14,11 @@
 
 {% block main %}
     <form id="login" method="post">
-        <input type="text" id="name" name="name" placeholder="שם בדוי" value="{{request.args.get("name", "")}}"></label>
+        {% csrf_token %}
+        <input type="text" id="name" name="name" placeholder="שם בדוי">
         <input  type="password" id="password" name="password" placeholder="סיסמא">
-        {% if request.args.get("error") == "no_name" %}
-        <div class="error">שכחתם להזין שם?</div>
-        {% elif request.args.get("error") == "no_password" %}
-        <div class="error">שכחתם להזין סיסמא?</div>
-        {% elif request.args.get("error") == "bad_password" %}
-        <div class="error">הסיסמא לא נכונה, נסו שנית.</div>
-        {% endif %}
-
         <input id="login" type="submit" value="כניסה">
         <div class="clear"></div>
-        <div class="help" style="display:none">
-            <p><strong>שכחתם את הסיסמא שלכם?</strong><p>
-            <p>באסה.</p>
-            <p>
-            בכדי לשמור על האנונימיות שלכם אנחנו לא שומרים עליכם שום פרט וגם את הסיסמא אנחנו שומרים בצורה מוצפנת כך שאין לנו מושג מה היא. אתם מוזמנים לפתוח עוד פרופיל באתר. ממילא אף אחד לא יודע מי אתם באמת, ולפעמים זה אפילו נחמד לפתוח דף חלק.
-            </p>
-        </div>
     </form>
     <form id="register" action="/register" method="get">
         <div class="help">

@@ -9,24 +9,25 @@
     <script type="text/javascript" src="/static/js/chat.js"></script>
     <script type="text/javascript">
         chatConfig = {
-            lastMessageId : '{{ conversation.messages[-1].id if messages else 0 }}',
+            lastMessageId : '{{ conversation.last_message_id }}',
             status : '{{ conversation.status }}',
-            user : '{{ session.get("logged_in_user", "") }}',
+            user : '{{ logged_in_user }}',
             userMessageType : '{{ user_message_type }}'
         }
     </script>
     <!-- reusing server-side template for client-side -->
     <script id="message-template" type="text/x-handlebars-template">
-        {{ include_raw("_message.html") }}
+        {# {{ include_raw("_message.html") }} #}
     </script>
 {% endblock %}
 
 {% block main %}
     <div class="conversation">
 
-        <div class="title {{conversation.messages[0].read_class}}">{{conversation.title}}</div>
+        {# <div class="title {{conversation.messages[0].read_class}}">{{conversation.title}}</div> #}
+        <div class="title">{{conversation.title}}</div>
         <div id="history" class="messages">
-            {% for message in conversation.messages %}
+            {% for message in conversation.all_messages %}
                 {% include "_message.html" %}
             {% endfor %}
         </div>

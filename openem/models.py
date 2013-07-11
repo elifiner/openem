@@ -2,17 +2,6 @@ from django.db import models
 from openem import utils
 from datetime import datetime
 
-# class Campaign(models.Model):
-#     name = models.CharField(max_length=255, unique=True)
-#     source = models.CharField(max_length=255)
-#     type = models.CharField(max_length=255)
-#     rating = models.IntegerField(blank=True, null=True)
-#     enabled = models.BooleanField(default=True)
-#     countries = SeparatedValuesField(blank=True)
-#     whitelists = SeparatedValuesField(blank=True)
-#     blacklists = SeparatedValuesField(blank=True)
-#     buyer_lines = SeparatedValuesField(blank=True)
-
 class User(models.Model):
     class Meta:
         db_table = 'users'
@@ -100,17 +89,21 @@ class Conversation(models.Model):
     def first_messages(self):
         return self.messages.all()[:2]
 
-    # @property
-    # def start_time_since(self):
-    #     return utils.prettydate(self.start_time)
+    @property
+    def last_message_id(self):
+        return self.messages.reverse()[0]
 
-    # @property
-    # def update_time_since(self):
-    #     return utils.prettydate(self.update_time)
+    @property
+    def start_time_since(self):
+        return utils.prettydate(self.start_time)
 
-    # @property
-    # def slug(self):
-    #     return re.compile('\W+', re.UNICODE).sub('_', self.title)
+    @property
+    def update_time_since(self):
+        return utils.prettydate(self.update_time)
+
+    @property
+    def slug(self):
+        return re.compile('\W+', re.UNICODE).sub('_', self.title)
 
     # @property
     # def read_class(self):
@@ -187,9 +180,9 @@ class Message(models.Model):
     #     else:
     #         return Message.TYPE.LISTENER
 
-    # @property
-    # def post_time_since(self):
-    #     return utils.prettydate(self.post_time)
+    @property
+    def post_time_since(self):
+        return utils.prettydate(self.post_time)
 
     # @property
     # def read_class(self):
