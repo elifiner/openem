@@ -24,6 +24,7 @@
         <input placeholder="שם בדוי" type="text" id="name" name="name" value={{request.args.get("name", "")}}>
         <input placeholder="סיסמא" type="password" id="password" name="password">
         <input placeholder="שוב סיסמא" type="password" id="password2" name="password2">
+
         {% if request.args.get("error") == "user_exists" %}
         <div class="error">מישהו כבר נרשם עם השם {{request.args.get("name", "")}}.</div>
         <div class="help">

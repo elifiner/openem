@@ -6,7 +6,7 @@ Issues
 - remove SECRET_KEY from production installation
 - remove DEBUG=True from production installation
 - move session management to database
-- timestamp doesn't show on messages
+V timestamp doesn't show on messages
 
 
 Not implemented
@@ -14,7 +14,9 @@ Not implemented
 
 - profile page
 - new conversations
-- documents
+V documents
 - post message
 - login
 - register
+- unread
+- dynamic loading

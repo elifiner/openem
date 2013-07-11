@@ -1,11 +1,19 @@
+import re
 from django.db import models
 from openem import utils
 from datetime import datetime
 
+class GetOrNoneManager(models.Manager):
+    def get_or_none(self, **kwargs):
+        try:
+            return self.get(**kwargs)
+        except self.model.DoesNotExist:
+            return None
+
 class User(models.Model):
     class Meta:
         db_table = 'users'
-
+    objects = GetOrNoneManager()
     name = models.CharField(max_length=255, unique=True)
     password_hash = models.CharField(max_length=255)
     create_time = models.DateTimeField(db_index=True)
@@ -16,8 +24,18 @@ class User(models.Model):
         if not self.create_time:
             self.create_time = datetime.utcnow()
 
-    def __repr__(self):
-        return "<User('%s')>" % (self.name)
+    def __unicode__(self):
+        return self.name
+
+    def login(self, session):
+        session['logged_in_user'] = self.id
+
+    def logout(self, session):
+        del session['logged_in_user']
+
+    @classmethod
+    def get_logged_in(self, session):
+        return self.objects.get_or_none(pk=session.get('logged_in_user'))
 
     # @classmethod
     # def get(cls, name):
@@ -78,8 +96,8 @@ class Conversation(models.Model):
         if not self.status:
             self.status = self.STATUS.PENDING
 
-    def __repr__(self):
-        return '<Conversation(%s)>' % (self.id)
+    def __unicode__(self):
+        return self.title
 
     @property
     def all_messages(self):
@@ -160,8 +178,8 @@ class Message(models.Model):
         if not self.post_time:
             self.post_time = datetime.utcnow()
 
-    def __repr__(self):
-        return '<Message (%s)>' % (self.id)
+    def __unicode__(self):
+        return self.text
 
     # def __json__(self):
     #     data = super(Message, self).__json__()
