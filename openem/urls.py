@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
+from openem import views
 
 urlpatterns = patterns('',
-    url(r'^', include('openem.urls')),
+    url(r'^$', views.landing),
 )

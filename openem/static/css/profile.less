@@ -1,0 +1,75 @@
+@import "vars.less";
+
+body {
+    background: @lightBackground;
+}
+
+header {
+    #menu {
+        display: none;
+    }
+
+    #new-sharing {
+        margin-left: 0;
+    }
+
+}
+
+.rubriks {
+    margin-top: 20px;
+    .row {
+        overflow: hidden;
+        margin-bottom: 2%;
+
+        &:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .rubrik {
+            background: @headerBackground;
+            padding: 10px 15px;
+            border-radius: 10px;
+            color: @lightTextColor;
+            text-align: center;
+            width: 49%;
+            float: right;
+            text-decoration: none;
+            margin-left: 2%;
+
+            &:last-of-type {
+                margin-left: 0;
+            }
+
+            .rubrik-count {
+                font-size: 40px;
+                margin-bottom: 10px;
+            }
+
+            .rubrik-title {
+                font-size: 18px;
+            }
+
+            &.wide {
+                width: 100%;
+                margin-left: 0;
+                background: #542835;
+            }
+        }
+    }
+}
+
+.menu {
+    margin: 30px 0;
+
+    .menu-item {
+        display: block;
+        border-top: 1px solid @headerBackground;
+        text-decoration: none;
+        padding: 10px;
+        background: url("/static/images/arrow-list.png") 10px center no-repeat;
+
+        &:last-of-type {
+            border-bottom: 1px solid @headerBackground;
+        }
+    }
+}

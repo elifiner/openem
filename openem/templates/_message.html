@@ -1,0 +1,13 @@
+    <div class="message {{message.type}} {{message.read_class}}">
+        <div class="message-header"></div>
+        <div class="message-body">
+            <div class="by">
+                <span class="author">{{message.author.name}}</span>
+                <span class="date">לפני {{message.post_time_since}}</span>
+            </div>
+            <div class="text">
+                {{message.unescaped_text}}
+            </div>
+        </div>
+        <div class="message-footer"></div>
+    </div>

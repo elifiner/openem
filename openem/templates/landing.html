@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet/less" type="text/css" href="/static/css/main.less">
+{% endblock %}
+
+{% block header %}
+    <header>
+        <div id="header-background"></div>
+        <div class="container">
+            <div id="big-logo">
+                    <img src="/static/images/logo-full-header.png" alt="openemotion קהילה לתמיכה רגשית">
+                    <div id="subtitle">קהילה לתמיכה רגשית</div>
+            </div>
+            <div id="description">
+                <p>
+                    יש רגעים בחיים בהם אנחנו מרגישים בודדים וצריכים לדבר עם מישהו. מישהו שבאמת יודע להקשיב. כאן המקום לדבר על הכל, במיוחד על מה שמפחיד או מביך לדבר עליו.
+                </p>
+                <p>
+                    שני עקרונות מנחים אותנו:
+                </p>
+            </div>
+            <div id="buttons">
+                <a class="btn" href="/anon">אנונימיות</a>
+                <a class="btn" href="/listen">והקשבה</a>
+            </div>
+        </div>
+    </header>
+{% endblock %}
+
+{% block main %}
+    {% for conv in conversations %}
+    <div class="conversation">
+        <div class="title">{{conv.title}}</div>
+        <div class="messages">
+        {% for message in conv.messages[:2] %}
+            {% include "_message.html" %}
+        {% endfor %}
+        </div>
+        <a class="action" href="/conversations/{{conv.id}}">המשך</a>
+    </div>
+    {% else %}
+    <div  class="note">זה נורא עצוב, אבל אין כאן שום דבר.</div>
+    {% endfor %}
+    <div id="enter">
+        <a href="/login" class="btn">כניסה לאתר</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,20 @@
+@gridColumns: 12;
+@gridMargin: 1%;
+@gridColumnWidth: (100% - (@gridColumns - 1) * @gridMargin) / @gridColumns;
+
+// a row of the grid
+.row() {
+    overflow: hidden;
+    margin-top: @gridMargin;
+    padding-bottom: @gridMargin;
+}
+
+// a column of the grid (size is the number of virtual 1/12 columns to use)
+.column(@size) {
+    width: (@gridColumnWidth * @size) + (@gridMargin * (@size - 1));
+    float: right;
+    margin-right: @gridMargin;
+    &:first-child {
+        margin-right: 0;
+    };
+}

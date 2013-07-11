@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block css %}
+  <link rel="stylesheet/less" type="text/css" href="/static/css/profile.less">
+{% endblock %}
+
+{% block js %}
+  <!--<script type="text/javascript" src="/static/js/conv_list_reload.js"></script>-->
+{% endblock %}
+
+{% block title %}
+הפרופיל שלי
+{% endblock %}
+
+{% block main %}
+    <div class="rubriks">
+        <div class="row">
+            <a href="/updates" class="rubrik">
+                <div class="rubrik-count">{{my_updated}}</div>
+                <div class="rubrik-title">השיחות שלי</div>
+            </a>
+            <a href="/pending" class="rubrik">
+                <div class="rubrik-count">{{pending}}</div>
+                <div class="rubrik-title">ממתינות</div>
+            </a>
+        </div>
+        <div class="row">
+            <a href="/all" class="rubrik">
+                <div class="rubrik-count">{{all_updated}}</div>
+                <div class="rubrik-title">כל השיחות</div>
+            </a>
+
+            <a href="/hallway" class="rubrik">
+                <div class="rubrik-count">&nbsp;</div>
+                <div class="rubrik-title">המסדרון</div>
+            </a>
+        </div>
+        <div class="row">
+            <a href="/conversations/new" class="wide rubrik">
+                <div class="rubrik-title">אני רוצה לשתף</div>
+            </a>
+        </div>
+        <div class="row">
+            <a href="/conversations/new_notyet" class="wide rubrik">
+                <div class="rubrik-title">אני לא רוצה לשתף עדיין</div>
+            </a>
+        </div>
+    </div>
+
+    <div class="menu">
+        <a href="/faq" class="menu-item">שאלות נפוצות</a>
+        <a href="/terms" class="menu-item">תנאי שימוש</a>
+        {# <a href="/settings" class="menu-item">הגדרות</a> #}
+        <a href="/logout?goto=/" class="menu-item">יציאה ({{session.logged_in_user}})</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet/less" type="text/css" href="/static/css/updates.less">
+{% endblock %}
+
+{% block js %}
+{% endblock %}
+
+{% block title %}
+{{title}}
+{% endblock %}
+
+{% block main %}
+    {% for conv in conversations %}
+    <div class="conversation">
+        <div class="title {{conv.unread_messages[0].read_class}}">{{conv.title}}</div>
+        <div class="messages">
+        {% for message in conv.unread_messages[:4] %}
+            {% include "_message.html" %}
+        {% endfor %}
+        </div>
+        <a class="action {{conv.read_class}}" href="/conversations/{{conv.id}}">המשך</a>
+    </div>
+    {% else %}
+    <div  class="note">זה נורא עצוב, אבל אין כאן שום דבר.</div>
+    {% endfor %}
+{% endblock %}

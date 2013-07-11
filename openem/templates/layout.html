@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+    <title></title>
+    <link rel="image_src" href="http://www.openemotion.org/static/images/large-icon.png" />
+    <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet/less" type="text/css" href="/static/css/style.less">
+    <link rel="stylesheet/less" type="text/css" href="/static/css/layout.less">
+    <link rel="stylesheet/less" type="text/css" href="/static/css/forms.less">
+    {% block css %}{% endblock %}
+    <script type="text/javascript" src="/static/js/less.js"></script>
+    <meta name="viewport" content="width=device-width initial-scale=1, maximum-scale=1">
+    <meta charset="utf8">
+</head>
+<body>
+
+    {% block header %}
+    <header>
+        <div class="container">
+            <a href="javascript:history.back();"><img id="back" src="/static/images/arrow-navigation.png"></a>
+            <h1 id="title">{% block title %}{% endblock %}</h1>
+            <a href="/"><img id="menu" src="/static/images/menu-btn.png"></a>
+            <a href="/conversations/new"><img id="new-sharing" src="/static/images/new-sharing-btn.png"></a>
+            <a href="/"><img id="logo" img src="/static/images/logo-narrow-header.png"></a>
+        </div>
+    </header>
+    {% endblock %}
+
+    <div id="main">
+        {% block main %}{% endblock %}
+    </div>
+
+    <script type="text/javascript" src="/static/js/jquery-1.8.2.js"></script>
+    <script type="text/javascript" >
+        globalConfig = {
+          UPDATE_INTERVAL: {{ config.UPDATE_INTERVAL|tojson }}
+        }
+    </script>
+    {% block js %}{% endblock %}
+</body>
+</html>

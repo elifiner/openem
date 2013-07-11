@@ -1,0 +1,26 @@
+@import "vars.less";
+
+form {
+    margin-top: 20px;
+    padding-bottom: 0;
+
+    input[type="submit"] {
+        margin-top: 0;
+    }
+
+    textarea {
+        direction: rtl;
+        background: @textBackground;
+        height: 100px;
+    }
+}
+
+.message:last-child .message-footer {
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+}
+
+.conversation .read {
+    // disable unread marking when viewing conversation
+    color: @textColor;
+}

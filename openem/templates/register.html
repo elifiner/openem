@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block css%}
+    <link rel="stylesheet/less" type="text/css" href="/static/css/login.less">
+{% endblock %}
+
+{% block js%}
+    <script type="text/javascript">document.getElementById("name").focus()</script>
+{% endblock %}
+
+{% block title %}
+הצטרפות
+{% endblock %}
+
+{% block main %}
+    <form id="register" method="post">
+        <div class="help">
+            <strong>הרישום לאתר הוא אנונימי לחלוטין</strong> כדי שתרגישו חופשיים לדבר על הכל. 
+            מומלץ לבחור סיסמא שמורכבת מכמה מילים (אפשר אפילו בעברית) - יותר קל לזכור והרבה יותר בטוח מסיסמאות רגילות.
+            </p>
+            <p>ברוכים הבאים!</p>
+            <p></p>
+        </div>
+        <input placeholder="שם בדוי" type="text" id="name" name="name" value={{request.args.get("name", "")}}>
+        <input placeholder="סיסמא" type="password" id="password" name="password">
+        <input placeholder="שוב סיסמא" type="password" id="password2" name="password2">
+        {% if request.args.get("error") == "user_exists" %}
+        <div class="error">מישהו כבר נרשם עם השם {{request.args.get("name", "")}}.</div>
+        <div class="help">
+            <p>
+                אנחנו ממליצים להוסיף לשם שלכם שם של מקום, מקצוע או משהו שמאפיין אתכם.
+                למשל: אלי עיניים כחולות, גברי הפילוסוף, יעל המטפלת.
+            </p>
+        </div>
+        {% elif request.args.get("error") == "password_mismatch" %}
+        <div class="error">הסיסמאות יצאו שונות, נסו שנית.</div>
+        {% elif request.args.get("error") == "no_name" %}
+        <div class="error">שכחתם להזין שם?</div>
+        {% elif request.args.get("error") == "no_password" %}
+        <div class="error">שכחתם להזין סיסמא?</div>
+        {% elif request.args.get("error") == "no_password2" %}
+        <div class="error">שכחתם להזין סיסמא פעם שניה?</div>
+        {% endif %}
+        <input type="submit" value="הצטרפות">
+        <div class="clear"></div>
+    </form>
+{% endblock %}

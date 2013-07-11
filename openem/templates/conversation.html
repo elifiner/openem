@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block css %}
+    <link rel="stylesheet/less" type="text/css" href="/static/css/conversation.less">
+{% endblock %}
+
+{% block js %}
+    <script type="text/javascript" src="/static/js/handlebars.js"></script>
+    <script type="text/javascript" src="/static/js/chat.js"></script>
+    <script type="text/javascript">
+        chatConfig = {
+            lastMessageId : '{{ conversation.messages[-1].id if messages else 0 }}',
+            status : '{{ conversation.status }}',
+            user : '{{ session.get("logged_in_user", "") }}',
+            userMessageType : '{{ user_message_type }}'
+        }
+    </script>
+    <!-- reusing server-side template for client-side -->
+    <script id="message-template" type="text/x-handlebars-template">
+        {{ include_raw("_message.html") }}
+    </script>
+{% endblock %}
+
+{% block main %}
+    <div class="conversation">
+
+        <div class="title {{conversation.messages[0].read_class}}">{{conversation.title}}</div>
+        <div id="history" class="messages">
+            {% for message in conversation.messages %}
+                {% include "_message.html" %}
+            {% endfor %}
+        </div>
+        <div class="noaction"></div>
+
+        <form id="message_form" action="">
+            <textarea dir="rtl" id="message" placeholder="תגידו משהו..."></textarea>
+            <input id="submit_message" type="submit" class="btn" value="שליחה">
+        </form>
+
+    </div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block css%}
+  <link rel="stylesheet/less" type="text/css" href="/static/css/settings.less">
+{% endblock %}
+
+{% block title %}
+הגדרות
+{% endblock %}
+
+{% block main %}
+    <form id="update-name" action="">
+        <h2>עדכון שם בדוי</h2>
+        <div class="help">
+            כשתעדכנו את השם הבדוי שלכם, הוא ישתנה בכל השיחות שבהן השתתפתם עד עתה.
+        </div>
+        <input type="text" placeholder="שם בדוי חדש">
+        <input type="submit" value="שמירה">
+        <div class="clear"></div>
+    </form>
+    <form id="update-password" action="">
+        <h2>עדכון סיסמא</h2>
+        <div class="help">
+            מומלץ לבחור סיסמא שמורכבת מכמה מילים (אפשר גם בעברית). יותר קל לזכור והרבה יותר בטוח.
+        </div>
+        <input type="password" placeholder="סיסמא נוכחית">
+        <input type="password" placeholder="סיסמא חדשה">
+        <input type="password" placeholder="שוב סיסמא חדשה">
+        <input type="submit" value="שמירה">
+        <div class="clear"></div>
+    </form>
+    <form id="update-email-settings" action="">
+        <h2>עדכון אימייל</h2>
+        <div class="help">
+            אתם יכולים לרשום את האימייל שלכם ולקבל עדכונים על הודעות חדשות באתר. אנחנו לעולם לא נגלה אותו לאף אחד ולא נציק לכם עם שטויות.
+        </div>
+        <input type="email" placeholder="somebody@somewhere.com">
+        <label class="checkbox"><input type="checkbox" id="">אני רוצה לקבל עדכונים לשיחות שלי</label>
+        <label class="checkbox"><input type="checkbox" id="">אני רוצה לקבל עדכונים כלליים</label>
+        <input type="submit" value="שמירה">
+        <div class="clear"></div>
+    </form>
+{% endblock %}
