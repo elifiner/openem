@@ -1,7 +1,6 @@
 Issues
 ======
 
-- replace custom User class with standard Django user
 - access to conversation pages only for authorized users
 - remove SECRET_KEY from production installation
 - remove DEBUG=True from production installation
@@ -14,7 +13,6 @@ Not implemented
 
 - profile page
 - new conversations
-V documents
 - post message
 - login
 - register

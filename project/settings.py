@@ -115,13 +115,13 @@ TEMPLATE_DIRS = (
 )
 
 INSTALLED_APPS = (
-    # 'django.contrib.auth',
-    # 'django.contrib.contenttypes',
-    # 'django.contrib.sites',
-    # 'django.contrib.messages',
-    # 'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.admin',
     # 'django.contrib.admindocs',
-    # 'django.contrib.sessions',
+    'django.contrib.sessions',
     'django.contrib.staticfiles',
     'south', # migrations
     'openem',

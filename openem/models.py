@@ -3,82 +3,9 @@ from django.db import models
 from openem import utils
 from datetime import datetime
 
-class GetOrNoneManager(models.Manager):
-    def get_or_none(self, **kwargs):
-        try:
-            return self.get(**kwargs)
-        except self.model.DoesNotExist:
-            return None
-
-class User(models.Model):
-    class Meta:
-        db_table = 'users'
-    objects = GetOrNoneManager()
-    name = models.CharField(max_length=255, unique=True)
-    password_hash = models.CharField(max_length=255)
-    create_time = models.DateTimeField(db_index=True)
-    # unread = models.ForeignKey('Unread')
-
-    def __init__(self, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
-        if not self.create_time:
-            self.create_time = datetime.utcnow()
-
-    def __unicode__(self):
-        return self.name
-
-    def login(self, session):
-        session['logged_in_user'] = self.id
-
-    def logout(self, session):
-        del session['logged_in_user']
-
-    @classmethod
-    def get_logged_in(self, session):
-        return self.objects.get_or_none(pk=session.get('logged_in_user'))
-
-    # @classmethod
-    # def get(cls, name):
-    #     return cls.query.filter_by(name=name).first()
-
-    # @classmethod
-    # def get_or_404(cls, name):
-    #     return cls.query.filter_by(name=name).first_or_404()
-
-    # @property
-    # def create_time_since(self):
-    #     return utils.prettydate(self.create_time)
-
-    # @classmethod
-    # def get_current(cls):
-    #     from flask import session
-    #     return cls.get(session.get('logged_in_user'))
-
-    # def set_last_read_message(self, conv, message_id):
-    #     Unread.set(self.id, conv.id, message_id)
-
-    # def get_unread_conversations(self):
-    #     result = []
-    #     conversations = db.session.query(Conversation, db.func.max(Message.id)).join(Message).group_by(Conversation.id)
-    #     conversations = conversations.order_by(Conversation.update_time.desc()).all()
-    #     unread = db.session.query(Unread).filter(Unread.user_id == self.id)
-    #     last_read_message_ids = dict((ur.conversation_id, ur.last_read_message_id) for ur in unread)
-    #     for conv, last_message_id in conversations:
-    #         if last_message_id > last_read_message_ids.get(conv.id, 0):
-    #             result.append(conv)
-    #     return result
-
-    # def get_my_unread_conversations(self):
-    #     result = []
-    #     for conv in self.get_unread_conversations():
-    #         if conv.owner_id == self.id:
-    #             result.append(conv)
-    #     return result
+from django.contrib.auth.models import User
 
 class Conversation(models.Model):
-    class Meta:
-        db_table = 'conversations'
-
     class STATUS(object):
         PENDING = 'pending'
         ACTIVE = 'active'
@@ -87,7 +14,7 @@ class Conversation(models.Model):
     update_time = models.DateTimeField(db_index=True)
     title = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
-    owner = models.ForeignKey('User', related_name='conversations')
+    owner = models.ForeignKey(User, related_name='conversations')
 
     def __init__(self, *args, **kwargs):
         super(Conversation, self).__init__(*args, **kwargs)
@@ -161,9 +88,6 @@ class Conversation(models.Model):
     #     return cls.query.order_by(cls.update_time.desc()).all()
 
 class Message(models.Model):
-    class Meta:
-        db_table = 'messages'
-
     class TYPE(object):
         TALKER = 'talker'
         LISTENER = 'listener'
@@ -171,7 +95,7 @@ class Message(models.Model):
     post_time = models.DateTimeField(db_index=True)
     text = models.TextField()
     conversation = models.ForeignKey('Conversation', related_name='messages')
-    author = models.ForeignKey('User')
+    author = models.ForeignKey(User)
 
     def __init__(self, *args, **kwargs):
         super(Message, self).__init__(*args, **kwargs)

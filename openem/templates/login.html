@@ -13,8 +13,7 @@
 {% endblock %}
 
 {% block main %}
-
-    <form method="post">
+    <form id="login" method="post">
         {% for field in form %}
             {{ field.label_tag }}
             {{ field }}
@@ -25,7 +24,7 @@
         <input id="login" type="submit" value="כניסה">
         <div class="clear"></div>
     </form>
-    <form id="register" action="/register" method="get">
+    <form id="register" action="/register/" method="get">
         <div class="help">
             <p>
             <strong>שכחתם את הסיסמא שלכם?</strong> באסה. 
@@ -37,7 +36,7 @@
             <strong>אין לכם פרופיל באתר?</strong> הזדמנות מצויינת להרשם.
             </p>
             <p>
-            ההרשמה אנונימית לחלוטין ולוקחת כמה שניות. אנחנו אפילו לא מבקשים את האימייל שלכם.
+            ההרשמה אנונימית לחלוטין ולוקחת כמה שניות.
             </p>
         </div>
         <input type="submit" value="הצטרפות">
