@@ -1,21 +1,15 @@
 Issues
 ======
 
-- access to conversation pages only for authorized users
 - remove SECRET_KEY from production installation
 - remove DEBUG=True from production installation
-- move session management to database
-V timestamp doesn't show on messages
-
+- not registered user accesses a conversation, can't login, goes to registration, isn't redirected to conversation
 
 Not implemented
 ===============
 
 - profile page
-- new conversations
-- post message
-- login
-- register
 - unread
 - dynamic loading
 - email updates
+- message simulator

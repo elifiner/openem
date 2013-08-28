@@ -1,5 +1,6 @@
 # coding=utf8
 
+import json
 from datetime import datetime
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -8,6 +9,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.db import transaction
+from django.core import serializers
+from django.forms.models import model_to_dict
 
 from openem import models, forms
 
@@ -121,10 +124,32 @@ def post_message(request, id, slug):
 
     return redirect('/conversations/%s/%s/#bottom' % (id, slug))
 
+@login_required
+@transaction.commit_on_success
+def conversation_updates(request, id, slug):
+    conv = get_object_or_404(models.Conversation, pk=id)
+    last_message_id = int(request.GET.get('last_message_id', 0))
+    messages = list(conv.messages.updated(last_message_id, request.user))
+    last_message_id = messages[-1].id if messages else last_message_id
+
+    # FIXME: mark conversation as read by the user
+    # conv.mark_read(user)
+
+    # FIXME: for some reason the Conversation object goes away after commit
+    # messages = messages.values()
+    # model_to_dict(messages, fields=[], exclude=[])
+
+    dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
+
+    result = json.dumps(dict(
+        conversation=model_to_dict(conv),
+        messages=[model_to_dict(m) for m in messages],
+        last_message_id=last_message_id
+    ), default=dthandler)
+    return HttpResponse(result, content_type='application/json',)
+
 def get_message_type(conv, user):
     if conv.owner == user:
         return models.Message.TYPE.TALKER
     else:
         return models.Message.TYPE.LISTENER
-
-

@@ -29,18 +29,6 @@ class Conversation(models.Model):
         return self.title
 
     @property
-    def all_messages(self):
-        return self.messages.all()
-
-    @property
-    def first_messages(self):
-        return self.messages.all()[:2]
-
-    @property
-    def last_message_id(self):
-        return self.messages.reverse()[0].id
-
-    @property
     def start_time_since(self):
         return utils.prettydate(self.start_time)
 
@@ -60,18 +48,6 @@ class Conversation(models.Model):
     # def unread_messages(self):
     #     return self.get_unread_messages(User.get_current(), include_last_read=True)
 
-    # def get_first_message(self):
-    #     return self.messages.first()
-
-    # def get_last_message(self):
-    #     return db.session.query(Message).filter_by(conversation_id=self.id).order_by(Message.id.desc()).first()
-
-    # def get_updated_messages(self, last_message_id, for_user=None):
-    #     q = self.messages.filter(Message.id > last_message_id)
-    #     if for_user:
-    #         q = q.filter(Message.author_id != for_user.id)
-    #     return q.all()
-
     # def get_unread_messages(self, for_user, include_last_read=False):
     #     unread = Unread.get(for_user.id, self.id)
     #     last_read_message_id = unread.last_read_message_id if unread else 0
@@ -85,14 +61,30 @@ class Conversation(models.Model):
     #     if user:
     #         Unread.set(user.id, self.id, self.get_last_message().id)
 
-    # @classmethod
-    # def all(cls):
-    #     return cls.query.order_by(cls.update_time.desc()).all()
+class MessageManager(models.Manager):
+    use_for_related_fields = True
+
+    def get_query_set(self):
+        qs = super(MessageManager, self).get_query_set()
+        return qs.order_by('post_time')
+
+    def preview(self):
+        return self.get_query_set()[:2]
+
+    def last(self):
+        return self.get_query_set().reverse()[0]  
+
+    def updated(self, after_message_id, for_user):
+        qs = self.get_query_set().filter(id__gt = after_message_id)
+        qs = qs.exclude(author_id = for_user.id)
+        return qs
 
 class Message(models.Model):
     class TYPE(object):
         TALKER = 'talker'
         LISTENER = 'listener'
+
+    objects = MessageManager()
 
     post_time = models.DateTimeField(db_index=True)
     text = models.TextField()
@@ -107,38 +99,22 @@ class Message(models.Model):
     def __unicode__(self):
         return self.text
 
-    # def __json__(self):
-    #     data = super(Message, self).__json__()
-    #     data['author'] = self.author.name
-    #     data['type'] = self.type
-    #     data['unescaped_text'] = self.unescaped_text
-    #     return data
-
-    # @property
-    # def type(self):
-    #     if not self.conversation:
-    #         raise ValueError('message not connected to conversation')
-
-    #     if self.author is self.conversation.owner:
-    #         return Message.TYPE.TALKER
-    #     else:
-    #         return Message.TYPE.LISTENER
+    @property
+    def type(self):
+        if not self.conversation:
+            raise ValueError('message not connected to conversation')
+        if self.author == self.conversation.owner:
+            return Message.TYPE.TALKER
+        else:
+            return Message.TYPE.LISTENER
 
     @property
     def post_time_since(self):
         return utils.prettydate(self.post_time)
 
-    # @property
-    # def read_class(self):
-    #     return '' if self.is_unread_by(User.get_current()) else 'read'
-
     @property
     def html_text(self):
         return utils.text2p(self.text)
-
-    # def is_unread_by(self, user):
-    #     unread = Unread.get(user.id, self.conversation_id)
-    #     return unread is None or self.id > unread.last_read_message_id
 
 # class Unread(db.Model, Jsonable):
 #     __tablename__ = 'unread'

@@ -40,7 +40,7 @@ $(function() {
                 chatConfig.lastMessageId = data.last_message_id;
                 var doScroll = (data.messages.length > 0);
                 $.each(data.messages, function (index, message) {
-                    $("#history").append(formatMessage(message.author, message.type, message.unescaped_text, false));
+                    $("#history").append(formatMessage(message.author, message.type, multilineToP(message.text), false));
                 });
                 if (doScroll) {
                     scrollToBottom();

@@ -10,7 +10,7 @@
     <script type="text/javascript" src="/static/js/chat.js"></script>
     <script type="text/javascript">
         chatConfig = {
-            lastMessageId : {{ conversation.last_message_id }},
+            lastMessageId : {{ conversation.messages.last.id }},
             status : '{{ conversation.status }}',
             user : '{{ logged_in_user }}',
             userMessageType : '{{ user_message_type }}',
@@ -32,7 +32,7 @@
         {# <div class="title {{conversation.messages[0].read_class}}">{{conversation.title}}</div> #}
         <div class="title">{{conversation.title}}</div>
         <div id="history" class="messages">
-            {% for message in conversation.all_messages %}
+            {% for message in conversation.messages.all %}
                 {% include "_message.html" %}
             {% endfor %}
         </div>

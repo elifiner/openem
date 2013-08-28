@@ -33,7 +33,7 @@
     <div class="conversation">
         <div class="title">{{conv.title}}</div>
         <div class="messages">
-        {% for message in conv.first_messages %}
+        {% for message in conv.messages.preview %}
             {% include "_message.html" %}
         {% endfor %}
         </div>
