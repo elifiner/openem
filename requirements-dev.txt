@@ -3,3 +3,4 @@ pdbpp
 WebTest
 django-webtest
 pyquery
+requests
