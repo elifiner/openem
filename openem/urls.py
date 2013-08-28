@@ -8,5 +8,6 @@ urlpatterns = patterns('',
     url(r'^register/$', views.register),
     url(r'^conversations/(?P<id>\d+)/$', views.conversation),
     url(r'^conversations/(?P<id>\d+)/(?P<slug>\w+)/$', views.conversation),
+    url(r'^conversations/new/$', views.new_conversation),
     url(r'^(?P<name>\w+)/$', views.document),
 )

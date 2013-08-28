@@ -19,7 +19,7 @@ class IndexTests(WebTest):
         resp.mustcontain(u'הקשבה')
 
     def test_goes_to_profile_if_logged_in(self):
-        User.objects.create_user(username='eli', password='123456').save()
+        User.objects.create_user(username='eli', password='123456')
         resp = self.app.get('/', user='eli')
         resp.mustcontain(u'הפרופיל שלי')
 
@@ -43,7 +43,7 @@ class LoginTests(WebTest):
         resp = form.submit(status=400)
 
     def test_can_login_with_good_credentials(self):
-        User.objects.create_user(username='eli', password='123456').save()
+        User.objects.create_user(username='eli', password='123456')
         resp = self.app.get('/login/')
         form = resp.forms['login']
         form['username'] = 'eli'
@@ -58,7 +58,7 @@ class LoginTests(WebTest):
 
 class LogoutTests(WebTest):
     def test_can_logout_after_login(self):
-        User.objects.create_user(username='eli', password='123456').save()
+        User.objects.create_user(username='eli', password='123456')
 
         # login
         resp = self.app.get('/login/')
@@ -127,3 +127,33 @@ class RegisterTests(WebTest):
         form['password2'] = '123456'
         form['email'] = 'eli'
         resp = form.submit(status=400)
+
+class ProfileTest(WebTest):
+    def test_can_create_new_conversation(self):
+        User.objects.create_user(username='eli', password='123456')
+        resp = self.app.get('/', user='eli')
+        resp.mustcontain(u'הפרופיל שלי')
+        resp.click(href='/conversations/new', description=u'אני רוצה לשתף').follow()
+
+class NewConversationTests(WebTest):
+    def setUp(self):
+        User.objects.create_user(username='eli', password='123456')
+
+    def test_cant_create_with_no_title(self):
+        resp = self.app.get('/conversations/new/', user='eli')
+        form = resp.form
+        resp = form.submit(status=400)
+
+    def test_cant_create_with_no_message(self):
+        resp = self.app.get('/conversations/new/', user='eli')
+        form = resp.form
+        form['title'] = 'hello'
+        resp = form.submit(status=400)
+
+    def test_can_create(self):
+        resp = self.app.get('/conversations/new/', user='eli')
+        form = resp.form
+        form['title'] = 'hello'
+        form['message'] = 'my message'
+        resp = form.submit().follow()
+        resp.mustcontain('hello', 'my message')

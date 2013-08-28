@@ -22,13 +22,16 @@
     <div id="main">
         <div class="sharing">
             <div class="note">
-                {% block note %}
                 כל הכבוד על האומץ, אנחנו יודעים שזה לא קל לשתף משהו אישי שעובר עליכם. אף אחד כאן לא ייתן לכם עצות או פתרונות ובוודאי לא ישפוט אתכם על שום דבר. מותר לכם להרגיש הכל ומותר לכם להגיד הכל. כן, מותר אפילו לקלל, לצעוק או לבכות. מותר הכל. אנחנו כאן בכדי להקשיב, לעודד ולתת כתף תומכת.
-                {% endblock %}
             </div>
             <form method="post">
-                <input name="title" type="text" placeholder="נושא">
-                <textarea name="message" id="new-message" placeholder={% block placeholder %}"אני רוצה לשתף ש..." {% endblock %}></textarea>
+                {% for field in form %}
+                    <!-- {{ field.label_tag }} -->
+                    {{ field }}
+                    {{ field.errors }}
+                {% endfor %}
+                {{ form.non_field_errors }}
+                {% csrf_token %}
                 <input type="submit" class="btn" value="שליחה">
             </form>
         </div>

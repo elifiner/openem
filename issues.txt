@@ -18,3 +18,4 @@ Not implemented
 - register
 - unread
 - dynamic loading
+- email updates

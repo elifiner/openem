@@ -20,6 +20,8 @@ class Conversation(models.Model):
         super(Conversation, self).__init__(*args, **kwargs)
         if not self.start_time:
             self.start_time = datetime.utcnow()
+        if not self.update_time:
+            self.update_time = self.start_time
         if not self.status:
             self.status = self.STATUS.PENDING
 

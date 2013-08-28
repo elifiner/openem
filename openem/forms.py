@@ -1,7 +1,6 @@
 # coding=utf8
 
 from django import forms
-from django.core.validators import validate_email
 
 class FormBase(forms.Form):
     def add_field_error(self, field, error):
@@ -15,7 +14,7 @@ class FormBase(forms.Form):
         return 400 if self._errors else 200
 
     def __getattr__(self, name):
-        if name in (self.cleaned_data or {}):
+        if hasattr(self, 'cleaned_data') and name in (self.cleaned_data or {}):
             return self.cleaned_data[name]
         else:
             raise AttributeError(name)
@@ -54,11 +53,10 @@ class RegisterForm(FormBase):
         widget=forms.PasswordInput(),
         error_messages= {'required':u'סורי, אבל צריך להזין אית אותה הסיסמא פעמיים.'}
     )
-    email = forms.CharField(
+    email = forms.EmailField(
         label=u'אימייל (רק אם רוצים)', 
         max_length=60,
-        required=False,
-        validators = [validate_email]
+        required=False
     )
 
     def clean(self):
@@ -69,3 +67,16 @@ class RegisterForm(FormBase):
 
     def clean_username(self):
         return self.cleaned_data['username'].strip()
+
+class NewConversationForm(FormBase):
+    title = forms.CharField(
+        label=u'נושא',
+        max_length=200,
+        error_messages= {'required':u'על מה תרצו לדבר?'},
+        widget=forms.TextInput(attrs={'placeholder': u'נושא'})
+    )
+    message = forms.CharField(
+        label=u'הודעה',
+        error_messages= {'required':u'מה תרצו לשתף?'},
+        widget=forms.Textarea(attrs={'placeholder': u'אני רוצה לשתף ש...'})
+    )
