@@ -6,18 +6,23 @@
 
 {% block js %}
     <script type="text/javascript" src="/static/js/handlebars.js"></script>
+    <script type="text/javascript" src="/static/js/autoresize.js"></script>
     <script type="text/javascript" src="/static/js/chat.js"></script>
     <script type="text/javascript">
         chatConfig = {
-            lastMessageId : '{{ conversation.last_message_id }}',
+            lastMessageId : {{ conversation.last_message_id }},
             status : '{{ conversation.status }}',
             user : '{{ logged_in_user }}',
-            userMessageType : '{{ user_message_type }}'
+            userMessageType : '{{ user_message_type }}',
+            csrfToken : '{{ csrf_token }}'
         }
+        $(function() {
+            $("#message").autoResize();
+        });
     </script>
     <!-- reusing server-side template for client-side -->
     <script id="message-template" type="text/x-handlebars-template">
-        {# {{ include_raw("_message.html") }} #}
+        {% include_raw "_message.html" %}
     </script>
 {% endblock %}
 
@@ -33,10 +38,13 @@
         </div>
         <div class="noaction"></div>
 
-        <form id="message_form" action="">
-            <textarea dir="rtl" id="message" placeholder="תגידו משהו..."></textarea>
+        <form id="message_form" action="post" method="post">
+            <textarea id="message" name="message" placeholder="תגידו משהו..."></textarea>
             <input id="submit_message" type="submit" class="btn" value="שליחה">
+            {% csrf_token %}
         </form>
 
     </div>
+
+    <a id="bottom" name="bottom"></a>
 {% endblock %}

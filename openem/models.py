@@ -38,7 +38,7 @@ class Conversation(models.Model):
 
     @property
     def last_message_id(self):
-        return self.messages.reverse()[0]
+        return self.messages.reverse()[0].id
 
     @property
     def start_time_since(self):
@@ -133,8 +133,8 @@ class Message(models.Model):
     #     return '' if self.is_unread_by(User.get_current()) else 'read'
 
     @property
-    def unescaped_text(self):
-        return utils.unescape(self.text)
+    def html_text(self):
+        return utils.text2p(self.text)
 
     # def is_unread_by(self, user):
     #     unread = Unread.get(user.id, self.conversation_id)

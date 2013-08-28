@@ -1,15 +1,30 @@
 $(function() {
     var lastMessageId = 0;
 
+    // converts a multiline string to paragraphs
+    function multilineToP(text) {
+        text = $('<div/>').text(text).html(); // escaping
+        var lines = text.split(/\r?\n/);
+        for (var i = 0; i < lines.length; i++) {
+            if (lines[i].trim()) {
+                lines[i] = '<p>' + lines[i] + '</p>';
+            }
+        }
+        return lines.join('\n');
+    }
+
     // add a message to history and submit it to the server
     function submitMessage() {
-        var text = $("#message").val();
+        var message = $("#message").val();
         $("#message").val("");
-        $("#history").append(formatMessage(chatConfig.user, chatConfig.userMessageType, text, true));
-        // FIXME: doesn't scroll to bottom on Safari, probably works badly on phones
+        $("#history").append(formatMessage(chatConfig.user, chatConfig.userMessageType, multilineToP(message), true));
+        $("#message").height(0); // relies on min-height to set actual height
         scrollToBottom();
         $("#message").focus();
-        $.post("post", {text:text});
+        $.post("post", {
+            message : message, // escaping is done on the backend
+            csrfmiddlewaretoken: chatConfig.csrfToken
+        });
     }
 
     // get message updates from the server
@@ -23,7 +38,7 @@ $(function() {
             data: { last_message_id: chatConfig.lastMessageId },
             success: function (data, textStatus, jqXHR) {
                 chatConfig.lastMessageId = data.last_message_id;
-                var doScroll = isCloseToBottom();
+                var doScroll = (data.messages.length > 0);
                 $.each(data.messages, function (index, message) {
                     $("#history").append(formatMessage(message.author, message.type, message.unescaped_text, false));
                 });
@@ -46,7 +61,7 @@ $(function() {
                     "name" : author
                 },
                 "post_time_since" : "רגע",
-                "unescaped_text": text
+                "html_text": new Handlebars.SafeString(text)
             }
         });
     }
@@ -57,7 +72,7 @@ $(function() {
     }
 
     function scrollToBottom() {
-        $(document).scrollTop($(document).height());
+        $("html,body").scrollTop($("#bottom").offset().top - $(window).height());
     }
 
     $("#message_form").submit(function(e) {

@@ -1,6 +1,7 @@
 # coding=utf8
 from django_webtest import WebTest
 from django.contrib.auth.models import User
+from openem.models import Conversation, Message
 
 class IndexTests(WebTest):
     def test_can_get_to_login_page(self):
@@ -133,27 +134,46 @@ class ProfileTest(WebTest):
         User.objects.create_user(username='eli', password='123456')
         resp = self.app.get('/', user='eli')
         resp.mustcontain(u'הפרופיל שלי')
-        resp.click(href='/conversations/new', description=u'אני רוצה לשתף').follow()
+        resp.click(href='/conversations/new', description=u'אני רוצה לשתף')
 
 class NewConversationTests(WebTest):
     def setUp(self):
         User.objects.create_user(username='eli', password='123456')
 
     def test_cant_create_with_no_title(self):
-        resp = self.app.get('/conversations/new/', user='eli')
+        resp = self.app.get('/conversations/new', user='eli')
         form = resp.form
         resp = form.submit(status=400)
 
     def test_cant_create_with_no_message(self):
-        resp = self.app.get('/conversations/new/', user='eli')
+        resp = self.app.get('/conversations/new', user='eli')
         form = resp.form
         form['title'] = 'hello'
         resp = form.submit(status=400)
 
     def test_can_create(self):
-        resp = self.app.get('/conversations/new/', user='eli')
+        resp = self.app.get('/conversations/new', user='eli')
         form = resp.form
         form['title'] = 'hello'
         form['message'] = 'my message'
         resp = form.submit().follow()
         resp.mustcontain('hello', 'my message')
+
+class PostMessageTests(WebTest):
+    def setUp(self):
+        self.user = User.objects.create_user(username='eli', password='123456')
+        self.conv = Conversation.objects.create(owner=self.user, title='some title')
+        Message.objects.create(author=self.user, conversation=self.conv, text='some message')
+
+    def test_cant_post_with_empty_message(self):
+        resp = self.app.get('/conversations/1/some_title/', user='eli')
+        form = resp.form
+        form.submit(status=400)
+
+    def test_can_post(self):
+        resp = self.app.get('/conversations/1/some_title/', user='eli')
+        resp.mustcontain('some title', 'some message')
+        form = resp.form
+        form['message'] = 'another message'
+        resp = form.submit().follow()
+        resp.mustcontain('some title', 'some message', 'another message')

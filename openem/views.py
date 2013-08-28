@@ -1,11 +1,15 @@
 # coding=utf8
 
+from datetime import datetime
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import auth
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from openem import models, forms
+from django.http import HttpResponse, HttpResponseBadRequest
+from django.db import transaction
 
-User = auth.models.User
+from openem import models, forms
 
 def index(request):
     conversations = models.Conversation.objects.all()
@@ -65,6 +69,9 @@ def register(request):
         'form': form
     }, status=form.get_status())
 
+def document(request, name):
+    return render(request, 'docs/%s.html' % name)
+
 @login_required
 def conversation(request, id, slug=None):
     conv = get_object_or_404(models.Conversation, pk=id)
@@ -73,10 +80,11 @@ def conversation(request, id, slug=None):
     return render(request, 'conversation.html', {
         'conversation': conv,
         'logged_in_user': request.user,
-        'user_message_type': ''
+        'user_message_type': get_message_type(conv, request.user)
     })
 
 @login_required
+@transaction.commit_on_success
 def new_conversation(request):
     if request.method == 'POST':
         form = forms.NewConversationForm(request.POST)
@@ -93,5 +101,30 @@ def new_conversation(request):
         'form': form
     }, status=form.get_status())
 
-def document(request, name):
-    return render(request, 'docs/%s.html' % name)
+@login_required
+@transaction.commit_on_success
+def post_message(request, id, slug):
+    conv = get_object_or_404(models.Conversation, pk=id)
+    message = request.POST.get('message')
+    if not message:
+        return HttpResponseBadRequest()
+    if (conv.owner != request.user and conv.status == models.Conversation.STATUS.PENDING):
+        conv.status = models.Conversation.STATUS.ACTIVE
+    models.Message.objects.create(author=request.user, conversation=conv, text=message)
+    # FIXME: mark conversation as read by the user
+    # conv.mark_read(user)
+    conv.update_time = datetime.utcnow()
+    conv.save()
+
+    # FIXME: uncomment to send email updates
+    # send_email_updates(conv, message, user)
+
+    return redirect('/conversations/%s/%s/#bottom' % (id, slug))
+
+def get_message_type(conv, user):
+    if conv.owner == user:
+        return models.Message.TYPE.TALKER
+    else:
+        return models.Message.TYPE.LISTENER
+
+
