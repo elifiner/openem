@@ -1,7 +1,6 @@
 # coding=utf8
 from django_webtest import WebTest
-from django.contrib.auth.models import User
-from openem.models import Conversation, Message
+from openem.models import User, Conversation, Message
 
 class IndexTests(WebTest):
     def test_can_get_to_login_page(self):

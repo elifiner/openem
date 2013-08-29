@@ -3,7 +3,35 @@ from django.db import models
 from openem import utils
 from datetime import datetime
 
-from django.contrib.auth.models import User
+from django.contrib import auth
+
+class User(auth.models.AbstractUser):
+    def unread_conversations(self):
+        # get all the conversations that have at least one unread message
+        # whose id is heigher than what's recorded in last_read
+        qs = Conversation.objects.raw("""
+            select *
+            from openem_conversation
+            left outer join openem_lastread
+                on (openem_conversation.id = openem_lastread.conversation_id)
+            inner join (
+                    select conversation_id, max(id) as id
+                    from openem_message group by conversation_id
+                ) as max_message
+                on (openem_conversation.id = max_message.conversation_id)
+            where max_message.id > coalesce(openem_lastread.message_id, 0)
+        """)
+        return list(qs)
+
+    @property
+    def conversations(self):
+        return self.conversations.filter(message__author=self).distinct()
+
+    def mark_all_read(self, conversation):
+        """
+        Marks the conversation and all its messages as read.
+        """
+        LastRead.objects.set(conversation=conversation, user=self, message=conversation.messages.last)
 
 class Conversation(models.Model):
     class STATUS(object):
@@ -14,7 +42,7 @@ class Conversation(models.Model):
     update_time = models.DateTimeField(db_index=True)
     title = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, related_name='conversations')
+    owner = models.ForeignKey(User, related_name='owned_conversations', on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
         super(Conversation, self).__init__(*args, **kwargs)
@@ -40,6 +68,13 @@ class Conversation(models.Model):
     def slug(self):
         return re.compile('\W+', re.UNICODE).sub('_', self.title)
 
+    def unread_messages(self, for_user):
+        qs = self.messages.all()
+        last_read = self.last_read.filter(user=for_user)
+        if last_read:
+            qs = qs.filter(id__gt=last_read[0].message.id)
+        return qs
+
     # @property
     # def read_class(self):
     #     return '' if self.get_unread_messages(User.get_current()).count() else 'read'
@@ -57,22 +92,14 @@ class Conversation(models.Model):
     #     else:
     #         return self.messages.filter(Message.id > last_read_message_id)
 
-    # def mark_read(self, user):
-    #     if user:
-    #         Unread.set(user.id, self.id, self.get_last_message().id)
-
 class MessageManager(models.Manager):
-    use_for_related_fields = True
-
-    def get_query_set(self):
-        qs = super(MessageManager, self).get_query_set()
-        return qs.order_by('post_time')
-
+    @property
     def preview(self):
         return self.get_query_set()[:2]
 
+    @property
     def last(self):
-        return self.get_query_set().reverse()[0]  
+        return self.get_query_set().reverse()[0]
 
     def updated(self, after_message_id, for_user):
         qs = self.get_query_set().filter(id__gt = after_message_id)
@@ -80,6 +107,9 @@ class MessageManager(models.Manager):
         return qs
 
 class Message(models.Model):
+    class Meta:
+        ordering = ['post_time']
+
     class TYPE(object):
         TALKER = 'talker'
         LISTENER = 'listener'
@@ -88,8 +118,8 @@ class Message(models.Model):
 
     post_time = models.DateTimeField(db_index=True)
     text = models.TextField()
-    conversation = models.ForeignKey('Conversation', related_name='messages')
-    author = models.ForeignKey(User)
+    conversation = models.ForeignKey('Conversation', related_name='messages', on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
         super(Message, self).__init__(*args, **kwargs)
@@ -116,30 +146,19 @@ class Message(models.Model):
     def html_text(self):
         return utils.text2p(self.text)
 
-# class Unread(db.Model, Jsonable):
-#     __tablename__ = 'unread'
-#     __table_args__ = (db.PrimaryKeyConstraint('user_id', 'conversation_id'), {})
+class LastReadManager(models.Manager):
+    def set(self, conversation, user, message):
+        try:
+            last_read = self.get_query_set().filter(conversation=conversation, user=user)[0]
+        except IndexError:  
+            last_read = LastRead(conversation=conversation, user=user)
+        last_read.message = message
+        last_read.save()
 
-#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
-#     conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), index=True)
-#     last_read_message_id = db.Column(db.Integer, db.ForeignKey('messages.id'), index=True)
-
-#     def __init__(self, user_id, conversation_id):
-#         self.user_id = user_id
-#         self.conversation_id = conversation_id
-
-#     def __repr__(self):
-#         return '<Unread (user=%s, conversation=%s, message=%s)>' % \
-#             (self.user_id, self.conversation_id, self.last_read_message_id)
-
-#     @classmethod
-#     def get(cls, user_id, conversation_id):
-#         return cls.query.filter_by(user_id=user_id, conversation_id=conversation_id).first()
-
-#     @classmethod
-#     def set(cls, user_id, conversation_id, last_read_message_id):
-#         unread = cls.get(user_id, conversation_id)
-#         if unread is None:
-#             unread = cls(user_id, conversation_id)
-#             db.session.add(unread)
-#         unread.last_read_message_id = last_read_message_id
+class LastRead(models.Model):
+    class Meta:
+        unique_together = ('user', 'conversation')
+    objects = LastReadManager()
+    user = models.ForeignKey(User, related_name='last_read', on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, related_name='last_read', on_delete=models.CASCADE)
+    message = models.ForeignKey(Message, on_delete=models.CASCADE)

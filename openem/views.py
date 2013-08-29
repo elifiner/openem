@@ -5,7 +5,6 @@ from datetime import datetime
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import auth
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.db import transaction
@@ -56,9 +55,9 @@ def register(request):
         form = forms.RegisterForm(request.POST)
         if form.is_valid():
             try:
-                user = User.objects.get(username=form.username)
-            except User.DoesNotExist:
-                user = User.objects.create_user(username=form.username, password=form.password, email=form.email)
+                user = models.User.objects.get(username=form.username)
+            except models.User.DoesNotExist:
+                user = models.User.objects.create_user(username=form.username, password=form.password, email=form.email)
                 user = auth.authenticate(username=form.username, password=form.password)
                 auth.login(request, user)
                 return redirect(request.GET.get('next', '/'))

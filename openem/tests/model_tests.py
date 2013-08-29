@@ -1,7 +1,6 @@
 # coding=utf8
 from django.test import TestCase
-from django.contrib.auth.models import User
-from openem.models import Conversation, Message
+from openem.models import User, Conversation, Message
 
 class ConversationTests(TestCase):
     def setUp(self):
@@ -35,3 +34,42 @@ class ConversationTests(TestCase):
         messages = self.conv.messages.updated(after_message_id=2, for_user=self.user1)
         self.assertEquals(len(messages), 1)
         self.assertEquals(messages[0].text, "i'm good")
+
+class UnreadTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='user1', password='123456')
+        self.user2 = User.objects.create_user(username='user2', password='123456')
+        self.conv1 = Conversation.objects.create(owner=self.user1, title='some title')
+        self.conv2 = Conversation.objects.create(owner=self.user2, title='another title')
+        Message.objects.create(conversation=self.conv1, author=self.user1, text='hello')
+        Message.objects.create(conversation=self.conv1, author=self.user2, text='hey')
+        Message.objects.create(conversation=self.conv1, author=self.user1, text='how are you?')
+        Message.objects.create(conversation=self.conv1, author=self.user2, text="i'm good")
+        Message.objects.create(conversation=self.conv2, author=self.user1, text='howdy')
+        Message.objects.create(conversation=self.conv2, author=self.user2, text='yowdy')
+        Message.objects.create(conversation=self.conv2, author=self.user1, text="how y'all are?")
+        Message.objects.create(conversation=self.conv2, author=self.user2, text="neva betta")
+
+    def test_should_return_all_messages_before_marking(self):
+        messages = self.conv1.unread_messages(for_user=self.user1)
+        self.assertEquals(len(messages), 4)
+
+    def test_should_return_no_messages_after_marking(self):
+        self.user1.mark_all_read(self.conv1)
+        messages = self.conv1.unread_messages(for_user=self.user1)
+        self.assertEquals(len(messages), 0)
+
+    def test_should_return_new_messages_after_marking_and_posting(self):
+        self.user1.mark_all_read(self.conv1)
+        Message.objects.create(conversation=self.conv1, author=self.user2, text='so am i')
+        messages = self.conv1.unread_messages(for_user=self.user1)
+        self.assertEquals(len(messages), 1)
+
+    def test_should_return_all_conversations_before_marking(self):
+        convs = self.user1.unread_conversations()
+        self.assertEquals(len(convs), 2)
+
+    def test_should_return_unread_conversations_after_marking(self):
+        self.user1.mark_all_read(self.conv1)
+        convs = self.user1.unread_conversations()
+        self.assertEquals(len(convs), 1)
