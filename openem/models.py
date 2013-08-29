@@ -4,34 +4,18 @@ from openem import utils
 from datetime import datetime
 
 from django.contrib import auth
+from django.db.models import F, Q
 
 class User(auth.models.AbstractUser):
     def unread_conversations(self):
-        # get all the conversations that have at least one unread message
-        # whose id is heigher than what's recorded in last_read
-        qs = Conversation.objects.raw("""
-            select *
-            from openem_conversation
-            left outer join openem_lastread
-                on (openem_conversation.id = openem_lastread.conversation_id)
-            inner join (
-                    select conversation_id, max(id) as id
-                    from openem_message group by conversation_id
-                ) as max_message
-                on (openem_conversation.id = max_message.conversation_id)
-            where max_message.id > coalesce(openem_lastread.message_id, 0)
-        """)
-        return list(qs)
+        qs = Conversation.objects.filter(
+            Q(visit__user__isnull=True) | Q(visit__user=self),
+            Q(visit__visit_time__isnull=True) | Q(update_time__gt=F('visit__visit_time')),
+        )
+        return qs
 
-    @property
-    def conversations(self):
-        return self.conversations.filter(message__author=self).distinct()
-
-    def mark_all_read(self, conversation):
-        """
-        Marks the conversation and all its messages as read.
-        """
-        LastRead.objects.set(conversation=conversation, user=self, message=conversation.messages.last)
+    def visited(self, conversation):
+        Visit.objects.set(conversation=conversation, user=self, visit_time=conversation.update_time)
 
 class Conversation(models.Model):
     class STATUS(object):
@@ -42,7 +26,7 @@ class Conversation(models.Model):
     update_time = models.DateTimeField(db_index=True)
     title = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, related_name='owned_conversations', on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, related_name='conversations', on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
         super(Conversation, self).__init__(*args, **kwargs)
@@ -70,9 +54,9 @@ class Conversation(models.Model):
 
     def unread_messages(self, for_user):
         qs = self.messages.all()
-        last_read = self.last_read.filter(user=for_user)
-        if last_read:
-            qs = qs.filter(id__gt=last_read[0].message.id)
+        visit = self.visit.filter(user=for_user)
+        if visit:
+            qs = qs.filter(post_time__gt=visit[0].visit_time)
         return qs
 
     # @property
@@ -125,6 +109,8 @@ class Message(models.Model):
         super(Message, self).__init__(*args, **kwargs)
         if not self.post_time:
             self.post_time = datetime.utcnow()
+        if self.conversation:
+            self.conversation.update_time = self.post_time
 
     def __unicode__(self):
         return self.text
@@ -146,19 +132,19 @@ class Message(models.Model):
     def html_text(self):
         return utils.text2p(self.text)
 
-class LastReadManager(models.Manager):
-    def set(self, conversation, user, message):
+class VisitManager(models.Manager):
+    def set(self, conversation, user, visit_time):
         try:
-            last_read = self.get_query_set().filter(conversation=conversation, user=user)[0]
+            visit = self.get_query_set().filter(conversation=conversation, user=user)[0]
         except IndexError:  
-            last_read = LastRead(conversation=conversation, user=user)
-        last_read.message = message
-        last_read.save()
+            visit = Visit(conversation=conversation, user=user)
+        visit.visit_time = visit_time
+        visit.save()
 
-class LastRead(models.Model):
+class Visit(models.Model):
     class Meta:
         unique_together = ('user', 'conversation')
-    objects = LastReadManager()
-    user = models.ForeignKey(User, related_name='last_read', on_delete=models.CASCADE)
-    conversation = models.ForeignKey(Conversation, related_name='last_read', on_delete=models.CASCADE)
-    message = models.ForeignKey(Message, on_delete=models.CASCADE)
+    objects = VisitManager()
+    user = models.ForeignKey(User, related_name='visit', on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, related_name='visit', on_delete=models.CASCADE)
+    visit_time = models.DateTimeField()

@@ -1,6 +1,6 @@
 # coding=utf8
 from django.test import TestCase
-from openem.models import User, Conversation, Message
+from openem.models import User, Conversation, Message, Visit
 
 class ConversationTests(TestCase):
     def setUp(self):
@@ -35,7 +35,7 @@ class ConversationTests(TestCase):
         self.assertEquals(len(messages), 1)
         self.assertEquals(messages[0].text, "i'm good")
 
-class UnreadTests(TestCase):
+class VisitTests(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username='user1', password='123456')
         self.user2 = User.objects.create_user(username='user2', password='123456')
@@ -55,12 +55,12 @@ class UnreadTests(TestCase):
         self.assertEquals(len(messages), 4)
 
     def test_should_return_no_messages_after_marking(self):
-        self.user1.mark_all_read(self.conv1)
+        self.user1.visited(self.conv1)
         messages = self.conv1.unread_messages(for_user=self.user1)
         self.assertEquals(len(messages), 0)
 
     def test_should_return_new_messages_after_marking_and_posting(self):
-        self.user1.mark_all_read(self.conv1)
+        self.user1.visited(self.conv1)
         Message.objects.create(conversation=self.conv1, author=self.user2, text='so am i')
         messages = self.conv1.unread_messages(for_user=self.user1)
         self.assertEquals(len(messages), 1)
@@ -70,6 +70,6 @@ class UnreadTests(TestCase):
         self.assertEquals(len(convs), 2)
 
     def test_should_return_unread_conversations_after_marking(self):
-        self.user1.mark_all_read(self.conv1)
+        self.user1.visited(self.conv1)
         convs = self.user1.unread_conversations()
         self.assertEquals(len(convs), 1)
