@@ -4,12 +4,13 @@ Issues
 - remove SECRET_KEY from production installation
 - remove DEBUG=True from production installation
 - not registered user accesses a conversation, can't login, goes to registration, isn't redirected to conversation
-- show only unread messages in updates.html
 
 Not implemented
 ===============
 
 - auto reloading for profile page
 - email updates
-- database converter
+- database converter from openemotion.org data
 - only show selected messages on landing page
+- email encryption
+- stats.py

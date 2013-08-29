@@ -131,38 +131,36 @@ def conversation_updates(request, id, slug):
     last_message_id = int(request.GET.get('last_message_id', 0))
     messages = list(conv.messages.updated(last_message_id, request.user))
     last_message_id = messages[-1].id if messages else last_message_id
-
-    # mark conversation as read
-    # request.user.mark_visited(conv)
-
     dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
     result = json.dumps(dict(
         conversation=model_to_dict(conv),
         messages=[model_to_dict(m) for m in messages],
         last_message_id=last_message_id
     ), default=dthandler)
+    request.user.mark_visited(conv)
     return HttpResponse(result, content_type='application/json',)
+
+def _updates(request, title, conversations):
+    result = render(request, 'updates.html', {
+        'title': title,
+        'conversations': conversations
+    })
+    for conv in conversations:
+        request.user.mark_visited(conv)
+    return result
 
 @login_required
 def all_conversations(request):
-    return render(request, 'updates.html', {
-        'title': u"כל השיחות",
-        'conversations': models.Conversation.objects.all()
-    })
+    return _updates(request, u"כל השיחות", models.Conversation.objects.all())
 
 @login_required
 def my_conversations(request):
-    return render(request, 'updates.html', {
-        'title': u"השיחות שלי",
-        'conversations': request.user.my_conversations()
-    })
+    return _updates(request, u"השיחות שלי", request.user.my_conversations())
 
 @login_required
 def pending_conversations(request):
-    return render(request, 'updates.html', {
-        'title': u"שיחות ממתינות",
-        'conversations': models.Conversation.objects.filter(status=models.Conversation.STATUS.PENDING)
-    })
+    pending = models.Conversation.objects.filter(status=models.Conversation.STATUS.PENDING)
+    return _updates(request, u"שיחות ממתינות", pending)
 
 def get_message_type(conv, user):
     if conv.owner == user:

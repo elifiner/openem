@@ -40,7 +40,7 @@ $(function() {
                 chatConfig.lastMessageId = data.last_message_id;
                 var doScroll = (data.messages.length > 0);
                 $.each(data.messages, function (index, message) {
-                    $("#history").append(formatMessage(message.author, message.type, multilineToP(message.text), false));
+                    $("#history").append(formatMessage(message.author.name, message.type, multilineToP(message.text), false));
                 });
                 if (doScroll) {
                     scrollToBottom();
@@ -58,17 +58,12 @@ $(function() {
             "message" : {
                 "type" : type,
                 "author" : {
-                    "name" : author
+                    "username" : author
                 },
                 "post_time_since" : "רגע",
                 "html_text": new Handlebars.SafeString(text)
             }
         });
-    }
-
-    function isCloseToBottom() {
-        fromBottom = $(document).height() -  $(window).scrollTop() - $(window).height();
-        return (fromBottom < 50);
     }
 
     function scrollToBottom() {
@@ -82,9 +77,4 @@ $(function() {
 
     // start periodic updates
     setInterval(updateHistory, globalConfig.UPDATE_INTERVAL);
-
-    // when page is reloaded scroll to the bottom if already there
-    if (isCloseToBottom()) {
-        scrollToBottom();
-    }
 });

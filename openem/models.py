@@ -34,6 +34,9 @@ class Conversation(models.Model):
         PENDING = 'pending'
         ACTIVE = 'active'
 
+    class Meta:
+        ordering = ['-update_time']
+
     start_time = models.DateTimeField(db_index=True)
     update_time = models.DateTimeField(db_index=True)
     title = models.CharField(max_length=255)

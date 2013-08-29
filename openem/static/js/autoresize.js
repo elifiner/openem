@@ -21,7 +21,7 @@
             hidden.html(value);
             el.height(hidden.height());
             if (scroll) {
-                $(document).scrollTop($(document).height());
+                $('html,body').scrollTop($(document).height() - $(window).height());
             }
         }
 
