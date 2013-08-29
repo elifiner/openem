@@ -8,7 +8,6 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.db import transaction
-from django.core import serializers
 from django.forms.models import model_to_dict
 
 from openem import models, forms
@@ -19,9 +18,9 @@ def index(request):
         return render(request, 'profile.html', {
             # FIXME: get actual message counts
             'user': request.user,
-            'my_updated': 0, 
-            'all_updated': 0, 
-            'pending': 0,
+            'my_updated': len(list(request.user.my_unread_conversations())),
+            'all_updated': len(list(request.user.all_unread_conversations())),
+            'pending': models.Conversation.objects.pending().count(),
         })
     else:
         return render(request, 'landing.html', {
@@ -79,11 +78,32 @@ def conversation(request, id, slug=None):
     conv = get_object_or_404(models.Conversation, pk=id)
     if slug != conv.slug:
         return redirect(conversation, id=id, slug=conv.slug)
+    request.user.mark_visited(conv)
     return render(request, 'conversation.html', {
         'conversation': conv,
         'logged_in_user': request.user,
         'user_message_type': get_message_type(conv, request.user)
     })
+
+@login_required
+@transaction.commit_on_success
+def post_message(request, id, slug):
+    conv = get_object_or_404(models.Conversation, pk=id)
+    message = request.POST.get('message')
+    if not message:
+        return HttpResponseBadRequest()
+    if (conv.owner != request.user and conv.status == models.Conversation.STATUS.PENDING):
+        conv.status = models.Conversation.STATUS.ACTIVE
+    models.Message.objects.create(author=request.user, conversation=conv, text=message)
+
+    request.user.mark_visited(conv)
+    conv.update_time = datetime.utcnow()
+    conv.save()
+
+    # FIXME: uncomment to send email updates
+    # send_email_updates(conv, message, user)
+
+    return redirect('/conversations/%s/%s/#bottom' % (id, slug))
 
 @login_required
 @transaction.commit_on_success
@@ -93,6 +113,7 @@ def new_conversation(request):
         if form.is_valid():
             conv = models.Conversation.objects.create(owner=request.user, title=form.title)
             models.Message.objects.create(author=request.user, conversation=conv, text=form.message)
+            request.user.mark_visited(conv)
             # FIXME: uncomment to send email updates
             # send_email_updates(conv, message, user)
             return redirect(conversation, id=conv.id, slug=conv.slug)
@@ -105,47 +126,43 @@ def new_conversation(request):
 
 @login_required
 @transaction.commit_on_success
-def post_message(request, id, slug):
-    conv = get_object_or_404(models.Conversation, pk=id)
-    message = request.POST.get('message')
-    if not message:
-        return HttpResponseBadRequest()
-    if (conv.owner != request.user and conv.status == models.Conversation.STATUS.PENDING):
-        conv.status = models.Conversation.STATUS.ACTIVE
-    models.Message.objects.create(author=request.user, conversation=conv, text=message)
-    # FIXME: mark conversation as read by the user
-    # conv.mark_read(user)
-    conv.update_time = datetime.utcnow()
-    conv.save()
-
-    # FIXME: uncomment to send email updates
-    # send_email_updates(conv, message, user)
-
-    return redirect('/conversations/%s/%s/#bottom' % (id, slug))
-
-@login_required
-@transaction.commit_on_success
 def conversation_updates(request, id, slug):
     conv = get_object_or_404(models.Conversation, pk=id)
     last_message_id = int(request.GET.get('last_message_id', 0))
     messages = list(conv.messages.updated(last_message_id, request.user))
     last_message_id = messages[-1].id if messages else last_message_id
 
-    # FIXME: mark conversation as read by the user
-    # conv.mark_read(user)
-
-    # FIXME: for some reason the Conversation object goes away after commit
-    # messages = messages.values()
-    # model_to_dict(messages, fields=[], exclude=[])
+    # mark conversation as read
+    # request.user.mark_visited(conv)
 
     dthandler = lambda obj: obj.isoformat() if isinstance(obj, datetime) else None
-
     result = json.dumps(dict(
         conversation=model_to_dict(conv),
         messages=[model_to_dict(m) for m in messages],
         last_message_id=last_message_id
     ), default=dthandler)
     return HttpResponse(result, content_type='application/json',)
+
+@login_required
+def all_conversations(request):
+    return render(request, 'updates.html', {
+        'title': u"כל השיחות",
+        'conversations': request.user.all_unread_conversations()
+    })
+
+@login_required
+def my_conversations(request):
+    return render(request, 'updates.html', {
+        'title': u"השיחות שלי",
+        'conversations': request.user.my_unread_conversations()
+    })
+
+@login_required
+def pending_conversations(request):
+    return render(request, 'updates.html', {
+        'title': u"שיחות ממתינות",
+        'conversations': models.Conversation.objects.pending()
+    })
 
 def get_message_type(conv, user):
     if conv.owner == user:

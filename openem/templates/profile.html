@@ -15,18 +15,18 @@
 {% block main %}
     <div class="rubriks">
         <div class="row">
-            <a href="/updates" class="rubrik">
-                <div class="rubrik-count">{{my_updated}}</div>
+            <a href="/conversations/my" class="rubrik">
+                <div id="my_updated" class="rubrik-count">{{my_updated}}</div>
                 <div class="rubrik-title">השיחות שלי</div>
             </a>
-            <a href="/pending" class="rubrik">
-                <div class="rubrik-count">{{pending}}</div>
+            <a href="/conversations/pending" class="rubrik">
+                <div id="pending" class="rubrik-count">{{pending}}</div>
                 <div class="rubrik-title">ממתינות</div>
             </a>
         </div>
         <div class="row">
-            <a href="/all" class="rubrik">
-                <div class="rubrik-count">{{all_updated}}</div>
+            <a href="/conversations/all" class="rubrik">
+                <div id="all_updated" class="rubrik-count">{{all_updated}}</div>
                 <div class="rubrik-title">כל השיחות</div>
             </a>
 
@@ -38,11 +38,6 @@
         <div class="row">
             <a href="/conversations/new" class="wide rubrik">
                 <div class="rubrik-title">אני רוצה לשתף</div>
-            </a>
-        </div>
-        <div class="row">
-            <a href="/conversations/new_notyet" class="wide rubrik">
-                <div class="rubrik-title">אני לא רוצה לשתף עדיין</div>
             </a>
         </div>
     </div>

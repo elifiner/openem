@@ -1,9 +1,12 @@
 # coding=utf8
+import os
 import re
 import time
 import random
 import requests
 from urlparse import urljoin
+
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 def verify(actual, expected):
     if not isinstance(expected, list):
@@ -97,7 +100,7 @@ class User(object):
         return self.Conversation(self, url)
 
 def simulate(url):
-    markov = Markov(open('corpus.txt').read().decode('utf8'))
+    markov = Markov(open(os.path.join(APP_ROOT, 'corpus.txt')).read().decode('utf8'))
     # lorem_ipsum = open('lorem.txt').read().decode('utf8').splitlines()
 
     def random_line():

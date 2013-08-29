@@ -1,32 +1,41 @@
 import re
-from django.db import models
-from openem import utils
 from datetime import datetime
 
+from django.db import models
 from django.contrib import auth
-from django.db.models import F, Q
+from django.db.models import F
+
+from openem import utils
 
 class User(auth.models.AbstractUser):
-    def unread_conversations(self):
-        qs = Conversation.objects.filter(
-            Q(visit__user__isnull=True) | Q(visit__user=self),
-            Q(visit__visit_time__isnull=True) | Q(update_time__gt=F('visit__visit_time')),
-        )
-        return qs
+    def all_unread_conversations(self):
+        visited = self.visits.filter(visit_time__gte=F('conversation__update_time')).all()
+        exclude = [v.conversation_id for v in visited]
+        # FIXME: this exclude may cause issues if number of visited conversations is very high
+        return Conversation.objects.exclude(id__in=exclude)
 
-    def visited(self, conversation):
+    def my_unread_conversations(self):
+        return self.all_unread_conversations().filter(messages__author=self)
+
+    def mark_visited(self, conversation):
         Visit.objects.set(conversation=conversation, user=self, visit_time=conversation.update_time)
+
+class ConversationManager(models.Manager):
+    def pending(self):
+        return self.get_query_set().filter(status=Conversation.STATUS.PENDING)
 
 class Conversation(models.Model):
     class STATUS(object):
         PENDING = 'pending'
         ACTIVE = 'active'
 
+    objects = ConversationManager()
+
     start_time = models.DateTimeField(db_index=True)
     update_time = models.DateTimeField(db_index=True)
     title = models.CharField(max_length=255)
     status = models.CharField(max_length=255)
-    owner = models.ForeignKey(User, related_name='conversations', on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __init__(self, *args, **kwargs):
         super(Conversation, self).__init__(*args, **kwargs)
@@ -54,7 +63,7 @@ class Conversation(models.Model):
 
     def unread_messages(self, for_user):
         qs = self.messages.all()
-        visit = self.visit.filter(user=for_user)
+        visit = self.visits.filter(user=for_user)
         if visit:
             qs = qs.filter(post_time__gt=visit[0].visit_time)
         return qs
@@ -145,6 +154,6 @@ class Visit(models.Model):
     class Meta:
         unique_together = ('user', 'conversation')
     objects = VisitManager()
-    user = models.ForeignKey(User, related_name='visit', on_delete=models.CASCADE)
-    conversation = models.ForeignKey(Conversation, related_name='visit', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='visits', on_delete=models.CASCADE)
+    conversation = models.ForeignKey(Conversation, related_name='visits', on_delete=models.CASCADE)
     visit_time = models.DateTimeField()

@@ -8,8 +8,6 @@ Issues
 Not implemented
 ===============
 
-- profile page: all messages, my messages, pending messages
-- unread
 - auto reloading for profile page
 - email updates
 - database converter

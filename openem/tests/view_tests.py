@@ -128,12 +128,19 @@ class RegisterTests(WebTest):
         form['email'] = 'eli'
         resp = form.submit(status=400)
 
-class ProfileTest(WebTest):
+class ProfileTests(WebTest):
     def test_can_create_new_conversation(self):
         User.objects.create_user(username='eli', password='123456')
         resp = self.app.get('/', user='eli')
         resp.mustcontain(u'הפרופיל שלי')
         resp.click(href='/conversations/new', description=u'אני רוצה לשתף')
+
+    def test_can_see_all_unread(self):
+        user = User.objects.create_user(username='eli', password='123456')
+        Conversation.objects.create(owner=user, title='some title')
+        resp = self.app.get('/', user='eli')
+        resp.mustcontain(u'הפרופיל שלי')
+        self.assertEquals(resp.pyquery('#all_updated').html(), '1')
 
 class NewConversationTests(WebTest):
     def setUp(self):

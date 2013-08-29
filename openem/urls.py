@@ -11,6 +11,9 @@ urlpatterns = patterns('',
     url(r'^conversations/(?P<id>\d+)/(?P<slug>\w+)/post$', views.post_message),
     url(r'^conversations/(?P<id>\d+)/(?P<slug>\w+)/updates$', views.conversation_updates),
     url(r'^conversations/new$', views.new_conversation),
+    url(r'^conversations/all$', views.all_conversations),
+    url(r'^conversations/pending$', views.pending_conversations),
+    url(r'^conversations/my$', views.my_conversations),
     url(r'^(?P<name>\w+)/$', views.document),
 )
 
