@@ -6,6 +6,7 @@ from django.contrib import auth
 from django.db.models import F
 
 from openem import utils
+from openem.middlewares import get_current_user
 
 class User(auth.models.AbstractUser):
     def all_unread_conversations(self):
@@ -17,19 +18,21 @@ class User(auth.models.AbstractUser):
     def my_unread_conversations(self):
         return self.all_unread_conversations().filter(messages__author=self)
 
-    def mark_visited(self, conversation):
-        Visit.objects.set(conversation=conversation, user=self, visit_time=conversation.update_time)
+    def pending_unread_conversations(self):
+        return self.all_unread_conversations().filter(status=Conversation.STATUS.PENDING)
 
-class ConversationManager(models.Manager):
-    def pending(self):
-        return self.get_query_set().filter(status=Conversation.STATUS.PENDING)
+    def my_conversations(self):
+        return Conversation.objects.filter(messages__author=self)
+
+    def mark_visited(self, conversation):
+        conversation.update_time = conversation.messages.last.post_time
+        conversation.save()
+        Visit.objects.set(conversation=conversation, user=self, visit_time=conversation.update_time)
 
 class Conversation(models.Model):
     class STATUS(object):
         PENDING = 'pending'
         ACTIVE = 'active'
-
-    objects = ConversationManager()
 
     start_time = models.DateTimeField(db_index=True)
     update_time = models.DateTimeField(db_index=True)
@@ -61,29 +64,22 @@ class Conversation(models.Model):
     def slug(self):
         return re.compile('\W+', re.UNICODE).sub('_', self.title)
 
-    def unread_messages(self, for_user):
+    def unread_messages_for_user(self, user):
         qs = self.messages.all()
-        visit = self.visits.filter(user=for_user)
+        visit = self.visits.filter(user=user)
         if visit:
             qs = qs.filter(post_time__gt=visit[0].visit_time)
         return qs
 
-    # @property
-    # def read_class(self):
-    #     return '' if self.get_unread_messages(User.get_current()).count() else 'read'
+    def unread_messages(self):
+        messages = list(self.unread_messages_for_user(get_current_user()))
+        if not messages and self.messages:
+            messages = [self.messages.last]
+        return messages
 
-    # @property
-    # def unread_messages(self):
-    #     return self.get_unread_messages(User.get_current(), include_last_read=True)
-
-    # def get_unread_messages(self, for_user, include_last_read=False):
-    #     unread = Unread.get(for_user.id, self.id)
-    #     last_read_message_id = unread.last_read_message_id if unread else 0
-    #     if include_last_read:
-    #         # return the last read message as well
-    #         return self.messages.filter(Message.id >= last_read_message_id)
-    #     else:
-    #         return self.messages.filter(Message.id > last_read_message_id)
+    @property
+    def read_class(self):
+        return '' if self.unread_messages_for_user(get_current_user()).exists() else 'read'
 
 class MessageManager(models.Manager):
     @property
@@ -140,6 +136,14 @@ class Message(models.Model):
     @property
     def html_text(self):
         return utils.text2p(self.text)
+
+    def is_unread_by(self, user):
+        visited = self.conversation.visits.filter(user=user)
+        return not visited or self.post_time > visited[0].visit_time
+
+    @property
+    def read_class(self):
+        return '' if self.is_unread_by(get_current_user()) else 'read'
 
 class VisitManager(models.Manager):
     def set(self, conversation, user, visit_time):

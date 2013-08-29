@@ -16,7 +16,7 @@
     <div class="conversation">
         <div class="title {{conv.read_class}}">{{conv.title}}</div>
         <div class="messages">
-        {% for message in conv.messages.all %}
+        {% for message in conv.unread_messages %}
             {% include "_message.html" %}
         {% endfor %}
         </div>

@@ -53,18 +53,18 @@ class VisitTests(TestCase):
         Message.objects.create(conversation=self.conv2, author=self.user2, text="neva betta")
 
     def test_should_return_all_messages_before_marking(self):
-        messages = self.conv1.unread_messages(for_user=self.user1)
+        messages = self.conv1.unread_messages_for_user(self.user1)
         self.assertEquals(len(messages), 5)
 
     def test_should_return_no_messages_after_marking(self):
         self.user1.mark_visited(self.conv1)
-        messages = self.conv1.unread_messages(for_user=self.user1)
+        messages = self.conv1.unread_messages_for_user(self.user1)
         self.assertEquals(len(messages), 0)
 
     def test_should_return_new_messages_after_marking_and_posting(self):
         self.user1.mark_visited(self.conv1)
         Message.objects.create(conversation=self.conv1, author=self.user2, text='so am i')
-        messages = self.conv1.unread_messages(for_user=self.user1)
+        messages = self.conv1.unread_messages_for_user(self.user1)
         self.assertEquals(len(messages), 1)
 
     def test_should_return_all_conversations_before_marking(self):

@@ -18,9 +18,9 @@ def index(request):
         return render(request, 'profile.html', {
             # FIXME: get actual message counts
             'user': request.user,
-            'my_updated': len(list(request.user.my_unread_conversations())),
-            'all_updated': len(list(request.user.all_unread_conversations())),
-            'pending': models.Conversation.objects.pending().count(),
+            'my_updated': request.user.my_unread_conversations().count(),
+            'all_updated': request.user.all_unread_conversations().count(),
+            'pending': request.user.pending_unread_conversations().count(),
         })
     else:
         return render(request, 'landing.html', {
@@ -147,21 +147,21 @@ def conversation_updates(request, id, slug):
 def all_conversations(request):
     return render(request, 'updates.html', {
         'title': u"כל השיחות",
-        'conversations': request.user.all_unread_conversations()
+        'conversations': models.Conversation.objects.all()
     })
 
 @login_required
 def my_conversations(request):
     return render(request, 'updates.html', {
         'title': u"השיחות שלי",
-        'conversations': request.user.my_unread_conversations()
+        'conversations': request.user.my_conversations()
     })
 
 @login_required
 def pending_conversations(request):
     return render(request, 'updates.html', {
         'title': u"שיחות ממתינות",
-        'conversations': models.Conversation.objects.pending()
+        'conversations': models.Conversation.objects.filter(status=models.Conversation.STATUS.PENDING)
     })
 
 def get_message_type(conv, user):
