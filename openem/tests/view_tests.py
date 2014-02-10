@@ -19,8 +19,8 @@ class IndexTests(WebTest):
         resp.mustcontain(u'הקשבה')
 
     def test_goes_to_profile_if_logged_in(self):
-        User.objects.create_user(username='eli', password='123456')
-        resp = self.app.get('/', user='eli')
+        user = User.objects.create_user(username='eli', password='123456')
+        resp = self.app.get('/', user=user)
         resp.mustcontain(u'הפרופיל שלי')
 
 class LoginTests(WebTest):
@@ -130,35 +130,35 @@ class RegisterTests(WebTest):
 
 class ProfileTests(WebTest):
     def test_can_create_new_conversation(self):
-        User.objects.create_user(username='eli', password='123456')
-        resp = self.app.get('/', user='eli')
+        user = User.objects.create_user(username='eli', password='123456')
+        resp = self.app.get('/', user=user)
         resp.mustcontain(u'הפרופיל שלי')
         resp.click(href='/conversations/new', description=u'אני רוצה לשתף')
 
     def test_can_see_all_unread(self):
         user = User.objects.create_user(username='eli', password='123456')
         Conversation.objects.create(owner=user, title='some title')
-        resp = self.app.get('/', user='eli')
+        resp = self.app.get('/', user=user)
         resp.mustcontain(u'הפרופיל שלי')
         self.assertEquals(resp.pyquery('#all_updated').html(), '1')
 
 class NewConversationTests(WebTest):
     def setUp(self):
-        User.objects.create_user(username='eli', password='123456')
+        self.user = User.objects.create_user(username='eli', password='123456')
 
     def test_cant_create_with_no_title(self):
-        resp = self.app.get('/conversations/new', user='eli')
+        resp = self.app.get('/conversations/new', user=self.user)
         form = resp.form
         resp = form.submit(status=400)
 
     def test_cant_create_with_no_message(self):
-        resp = self.app.get('/conversations/new', user='eli')
+        resp = self.app.get('/conversations/new', user=self.user)
         form = resp.form
         form['title'] = 'hello'
         resp = form.submit(status=400)
 
     def test_can_create(self):
-        resp = self.app.get('/conversations/new', user='eli')
+        resp = self.app.get('/conversations/new', user=self.user)
         form = resp.form
         form['title'] = 'hello'
         form['message'] = 'my message'
@@ -172,12 +172,12 @@ class PostMessageTests(WebTest):
         Message.objects.create(author=self.user, conversation=self.conv, text='some message')
 
     def test_cant_post_with_empty_message(self):
-        resp = self.app.get('/conversations/1/some_title/', user='eli')
+        resp = self.app.get('/conversations/1/some_title/', user=self.user)
         form = resp.form
         form.submit(status=400)
 
     def test_can_post(self):
-        resp = self.app.get('/conversations/1/some_title/', user='eli')
+        resp = self.app.get('/conversations/1/some_title/', user=self.user)
         resp.mustcontain('some title', 'some message')
         form = resp.form
         form['message'] = 'another message'

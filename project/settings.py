@@ -103,9 +103,11 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-AUTH_USER_MODEL = 'openem.User'
+AUTHENTICATION_BACKENDS = (
+    'openem.backends.ModelBackend',
+)
 
-SESSION_ENGIN = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 
 ROOT_URLCONF = 'project.urls'
 

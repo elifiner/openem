@@ -8,7 +8,10 @@ from django.db.models import F
 from openem import utils
 from openem.middlewares import get_current_user
 
-class User(auth.models.AbstractUser):
+class User(auth.models.User):
+    class Meta:
+        proxy = True
+
     def all_unread_conversations(self):
         visited = self.visits.filter(visit_time__gte=F('conversation__update_time')).all()
         exclude = [v.conversation_id for v in visited]

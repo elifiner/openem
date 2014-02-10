@@ -14,3 +14,4 @@ Not implemented
 - only show selected messages on landing page
 - email encryption
 - stats.py
+- write manual test suite (automate whatever is appropriate)
